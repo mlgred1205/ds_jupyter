@@ -1,0 +1,39 @@
+FROM ubuntu:18.04
+
+#This is a base image for miniconda 3.
+#No additional packages are installed.
+#
+#Build:
+#docker build -t mfreitas/dsclub_jupyter -f -f Dockerfile_Miniconda3_4.5.11_jupyter .
+#
+#Run:
+#docker run -it -p 8888:8888 -v $PWD:/data \
+  mfreitas/dsclub_jupyter /bin/bash -c "jupyter notebook \
+  --ip 0.0.0.0 --no-browser --allow-root --NotebookApp.token='' \
+  --notebook-dir='/data'"
+#
+#Clean images and containers (will delete all images and containers)
+#docker container prune
+#docker image prune -a
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV PATH /opt/conda/bin:$PATH
+
+RUN apt-get update --fix-missing && apt-get install -y wget bzip2 ca-certificates \
+    libglib2.0-0 libxext6 libsm6 libxrender1 \
+    git mercurial subversion
+
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O ~/miniconda.sh
+RUN /bin/bash ~/miniconda.sh -b -p /opt/conda && \
+    rm ~/miniconda.sh && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc
+
+RUN conda config --add channels defaults &&  \
+    conda config --add channels conda-forge && \
+    conda config --add channels bioconda
+
+COPY environment_jupyter.yml environment.yml
+RUN conda env update -f environment.yml
+EXPOSE 8888
