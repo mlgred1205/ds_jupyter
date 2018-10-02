@@ -1,0 +1,46 @@
+FROM ubuntu:18.04
+
+# BUILD
+# docker build -t mfreitas/specquantr -f Dockerfile_specquantr .
+#
+# RUN
+# Use the script "run_dsnotebook.sh/bat" or
+# docker run -it -p 8888:8888 -v $PWD:/data \
+#  mfreitas/specquantr /bin/bash -c "jupyter notebook \
+#  --ip 0.0.0.0 --no-browser --allow-root --NotebookApp.token='' \
+#  --notebook-dir='/data'"
+#
+# STOP
+# use the script "stop_dsnotebook.sh/bat" or
+# docker container stop notebookserver
+# docker rm notebookserver
+#
+# CLEAN IMAGES / CONTAINERS
+# !!! will delete ALL images and containers !!!
+# docker container prune
+# docker image prune -a
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV PATH /opt/conda/bin:$PATH
+
+RUN apt-get update --fix-missing && apt-get install -y wget bzip2 ca-certificates \
+    libglib2.0-0 libxext6 libsm6 libxrender1 \
+    git mercurial subversion
+
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O ~/miniconda.sh
+RUN /bin/bash ~/miniconda.sh -b -p /opt/conda && \
+    rm ~/miniconda.sh && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc
+
+RUN conda config --add channels defaults &&  \
+    conda config --add channels conda-forge && \
+    conda config --add channels bioconda
+
+COPY specquantr_env.yaml environment.yml
+RUN conda env update -f environment.yml
+EXPOSE 8888
+
+#docker build -t mfreitas/dsclub_jupyter .
+#docker run -it mfreitas/dsclub_jupyter /bin/bash
